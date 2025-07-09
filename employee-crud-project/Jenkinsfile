@@ -1,0 +1,37 @@
+pipeline {
+    agent any
+    stages {
+        stage('Checkout') {
+            steps {
+                git 'https://github.com/your/repo.git'
+            }
+        }
+        stage('Unit Test') {
+            steps {
+                sh 'pytest rest-service/tests/'
+            }
+        }
+        stage('Build Docker Images') {
+            steps {
+                sh 'docker build -t yourdockerhub/ui-app:latest ui-app'
+                sh 'docker build -t yourdockerhub/rest-service:latest rest-service'
+            }
+        }
+        stage('Push Images') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                    sh 'echo $PASSWORD | docker login -u $USERNAME --password-stdin'
+                    sh 'docker push yourdockerhub/ui-app:latest'
+                    sh 'docker push yourdockerhub/rest-service:latest'
+                }
+            }
+        }
+        stage('Deploy to EC2') {
+            steps {
+                sshagent(['your-ec2-key']) {
+                    sh 'ssh ec2-user@your-ec2 "docker pull yourdockerhub/ui-app:latest && docker pull yourdockerhub/rest-service:latest && docker-compose up -d"'
+                }
+            }
+        }
+    }
+}
