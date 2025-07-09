@@ -3,7 +3,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git 'https://github.com/your/repo.git'
+                git 'https://github.com/Nithya326/my_apps/tree/main'
             }
         }
         stage('Unit Test') {
